@@ -1,15 +1,14 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import tensorflow as tf
 AUTOTUNE = tf.data.experimental.AUTOTUNE
-import matplotlib.pyplot as plt
 import os
 import pathlib
 import random
 DATASET_ROOT_PATH="F://dataset//hanzi_dataset//dataset_character//dataset"
 TRAIN_PATH=DATASET_ROOT_PATH+"//train"
-TRAIN_PATH=pathlib.Path(TRAIN_PATH)
+
 TEST_PATH=DATASET_ROOT_PATH+"//test"
-TEST_PATH=pathlib.Path(TEST_PATH)
+
 def preprocess_image(image,img_size):
   image = tf.image.decode_png(image, channels=3)
   image = tf.image.resize(image, [img_size, img_size])
@@ -18,7 +17,7 @@ def preprocess_image(image,img_size):
 
 def load_and_preprocess_image(path):
   image = tf.io.read_file(path)
-  return preprocess_image(image,img_size=64)
+  return preprocess_image(image,img_size=32)
 
 def read_imgs_path_labels(path):
     '''
@@ -26,6 +25,7 @@ def read_imgs_path_labels(path):
     :param path:图片文件夹路径
     :return:图像路径，图像对应的标签
     '''
+    path=pathlib.Path(path)
     # 得到所有图片的路径
     all_image_paths=list(path.glob('*/*'))
     all_image_paths=[str(path) for path in all_image_paths]
@@ -61,13 +61,13 @@ def set_batch_shuffle(batch_size,ds,count):
 def change_range(image,label):
     return 2*image-1,label
 
+def get_dataSet(path):
+    all_image_path,all_labels=read_imgs_path_labels(path)
+    ds, count = create_DataSet(all_image_path, all_labels)
+    return ds,count
 if __name__ == '__main__':
-    all_image,all_labels=read_imgs_path_labels(TRAIN_PATH)
-    ds,count=create_DataSet(all_image,all_labels)
+    ds,count=get_dataSet(TRAIN_PATH)
     ds=set_batch_shuffle(16,ds,count)
-    keras_ds=ds.map(change_range)
-    mobile_net=tf.keras.applications.MobileNetV2(input_shape=(64,64,3),include_top=False)
-    mobile_net.trainable=False
-    image_batch,label_batch=next(iter(keras_ds))
-    feature_map_batch=mobile_net(image_batch)
-    print(feature_map_batch.shape)
+    for image_batch, label_batch in ds.take(1):
+        pass
+    print(image_batch.shape)
