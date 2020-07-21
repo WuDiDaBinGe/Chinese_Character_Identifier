@@ -3,8 +3,8 @@ import tensorflow as tf
 import tensorflow.keras as keras
 from  tensorflow.keras.callbacks import ReduceLROnPlateau
 from pre_process import pics_dataset
-import matplotlib as mpl
-mpl.use('Agg')
+# import matplotlib as mpl
+# mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
@@ -12,25 +12,25 @@ gpus = tf.config.experimental.list_physical_devices('GPU')
 for gpu in gpus:
   tf.config.experimental.set_memory_growth(gpu, True)
 
-DATASET_ROOT_PATH="/home/wbq/code/singleChar/dataset/"
+DATASET_ROOT_PATH="F://dataset//hanzi_dataset//dataset2"
 TRAIN_PATH=DATASET_ROOT_PATH+"//train"
 TEST_PATH=DATASET_ROOT_PATH+"//test"
-MODEL_SAVE="./model_save"
-LOG_DIR="./log"
+MODEL_SAVE="../model_save"
+LOG_DIR="../log"
 
 
-IMG_SIZE=64
+IMG_SIZE=128
 CHANNLES=3
-NUM_CLASS=3755
+NUM_CLASS=100
 BATCH_SIZE=32
-EPOCH=20
+EPOCH=15
 
 
 def change_range(image,label):
     return 2*image-1,label
 
 def loadModel(class_nums):
-    base_model=keras.applications.MobileNetV2(
+    base_model=keras.applications.Xception(
         input_shape=(IMG_SIZE,IMG_SIZE,CHANNLES),
         include_top=False
     )
@@ -45,6 +45,7 @@ def loadModel(class_nums):
     model=keras.Sequential([
         base_model,
         keras.layers.GlobalAveragePooling2D(),
+        keras.layers.Dropout(rate=0.5),
         keras.layers.Dense(class_nums,activation="softmax")
     ])
     return model
@@ -53,6 +54,8 @@ def train():
     # Load Dataset
     train_ds,train_num=pics_dataset.get_dataSet(TRAIN_PATH)
     test_ds,test_num=pics_dataset.get_dataSet(TEST_PATH)
+    # train_ds=train_ds.map(change_range)
+    # test_ds=test_ds.map(change_range)
     # Load Model
     model=loadModel(NUM_CLASS)
 
@@ -89,9 +92,9 @@ def train():
                         validation_data=test_ds_batch,
                         steps_per_epoch=train_steps_per_epoch,
                         validation_steps=valid_stpes_per_epoch,
-                        callbacks=[reduce_lr,tensorboard_callback,model_checkpoint_callback,early_stopping_checkpoint])
+                        callbacks=[reduce_lr,early_stopping_checkpoint])
 
-    test_loss, test_accuracy = model.evaluate(test_ds_batch)
+    test_loss, test_accuracy = model.evaluate(test_ds_batch,steps=20)
     print("initial loss: {:.2f}".format(test_loss))
     print("initial accuracy: {:.2f}".format(test_accuracy))
     model.save(MODEL_SAVE)
@@ -123,7 +126,7 @@ def show_loss_accuracy(history):
     plt.title('Training and Validation Loss')
     plt.xlabel('epoch')
     plt.show()
-    plt.savefig('./classification_pr.png')
+    #plt.savefig('./classification_pr.png')
 
 if __name__ == '__main__':
     history=train()

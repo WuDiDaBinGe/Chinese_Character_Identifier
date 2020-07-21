@@ -17,7 +17,7 @@ def preprocess_image(image,img_size):
 
 def load_and_preprocess_image(path):
   image = tf.io.read_file(path)
-  return preprocess_image(image,img_size=64)
+  return preprocess_image(image,img_size=128)
 
 def read_imgs_path_labels(path):
     '''
