@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="9bf433a9-48ec-477e-92c3-3237afe134c0" name="GPU21.77" url="http://10.110.21.77">
+        <fileTransfer host="10.110.21.77" port="22" rootFolder="/home/wbq/yuxiubin/charactersClassify" accessType="SFTP">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

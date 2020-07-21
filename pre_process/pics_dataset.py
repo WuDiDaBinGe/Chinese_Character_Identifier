@@ -17,7 +17,7 @@ def preprocess_image(image,img_size):
 
 def load_and_preprocess_image(path):
   image = tf.io.read_file(path)
-  return preprocess_image(image,img_size=32)
+  return preprocess_image(image,img_size=64)
 
 def read_imgs_path_labels(path):
     '''
@@ -36,6 +36,8 @@ def read_imgs_path_labels(path):
     label_to_index=dict((name,index) for index,name in enumerate(label_names))
     # 得到图片的标签索引
     all_image_labels=[label_to_index[pathlib.Path(path_).parent.name] for path_ in all_image_paths]
+    print(all_image_paths[:4])
+    print(all_image_labels[:4])
     return all_image_paths,all_image_labels
 
 def create_DataSet(all_img_paths,all_img_labels):
@@ -66,8 +68,8 @@ def get_dataSet(path):
     ds, count = create_DataSet(all_image_path, all_labels)
     return ds,count
 if __name__ == '__main__':
-    ds,count=get_dataSet(TRAIN_PATH)
-    ds=set_batch_shuffle(16,ds,count)
+    ds,count=get_dataSet(TEST_PATH)
+    ds=set_batch_shuffle(32,ds,count)
     for image_batch, label_batch in ds.take(1):
         pass
     print(image_batch.shape)

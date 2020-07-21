@@ -1,16 +1,29 @@
+import os
 import tensorflow as tf
 import tensorflow.keras as keras
+from  tensorflow.keras.callbacks import ReduceLROnPlateau
 from pre_process import pics_dataset
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
-DATASET_ROOT_PATH="F://dataset//hanzi_dataset//dataset_character//dataset"
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+gpus = tf.config.experimental.list_physical_devices('GPU')
+for gpu in gpus:
+  tf.config.experimental.set_memory_growth(gpu, True)
+
+DATASET_ROOT_PATH="/home/wbq/code/singleChar/dataset/"
 TRAIN_PATH=DATASET_ROOT_PATH+"//train"
 TEST_PATH=DATASET_ROOT_PATH+"//test"
+MODEL_SAVE="./model_save"
+LOG_DIR="./log"
 
-IMG_SIZE=32
+
+IMG_SIZE=64
 CHANNLES=3
 NUM_CLASS=3755
-BATCH_SIZE=16
-EPOCH=1
+BATCH_SIZE=32
+EPOCH=20
 
 
 def change_range(image,label):
@@ -21,7 +34,14 @@ def loadModel(class_nums):
         input_shape=(IMG_SIZE,IMG_SIZE,CHANNLES),
         include_top=False
     )
-    base_model.trainable=False
+    # base_model.load_weights("../models_weights/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.0_224_no_top.h5")
+    # Fine tune from this layer onwards
+    fine_tune_at = 129
+    base_model.trainable =True
+    # Freeze all the layers before the `fine_tune_at` layer
+    for layer in base_model.layers[:fine_tune_at]:
+        layer.trainable = False
+
     model=keras.Sequential([
         base_model,
         keras.layers.GlobalAveragePooling2D(),
@@ -30,42 +50,56 @@ def loadModel(class_nums):
     return model
 
 def train():
-    # 加载数据集
+    # Load Dataset
     train_ds,train_num=pics_dataset.get_dataSet(TRAIN_PATH)
     test_ds,test_num=pics_dataset.get_dataSet(TEST_PATH)
-    # 加载模型
+    # Load Model
     model=loadModel(NUM_CLASS)
-    # # Fine tune from this layer onwards
-    # fine_tune_at = 249
-    #
-    # # Freeze all the layers before the `fine_tune_at` layer
-    # for layer in model.layers[:fine_tune_at]:
-    #     layer.trainable = False
-    # 设置batch—size
+
+    # set batch—size
     train_ds_batch=pics_dataset.set_batch_shuffle(BATCH_SIZE,train_ds,train_num)
     test_ds_batch=pics_dataset.set_batch_shuffle(BATCH_SIZE,test_ds,test_num)
+    # LR Delay
+    sgd=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+    # LR reduce with epoch
+    reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.1,patience=5, mode='auto')
 
-    model.compile(optimizer=keras.optimizers.Adam(),
+
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
                   loss="sparse_categorical_crossentropy",
-                  metrics=["accuracy"]
+                  metrics=["accuracy"],
                   )
-    print("可训练变量{}".format(len(model.trainable_variables)))
+    print("Tainable num is:{}".format(len(model.trainable_variables)))
     model.summary()
 
     train_steps_per_epoch=tf.math.ceil(train_num/BATCH_SIZE).numpy()
     valid_stpes_per_epoch=tf.math.ceil(test_num/BATCH_SIZE).numpy()
+
+    # Creating Keras callbacks
+    tensorboard_callback = keras.callbacks.TensorBoard(
+        log_dir=LOG_DIR, histogram_freq=1)
+    model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
+        'training_checkpoints/weights.{epoch:02d}-{val_loss:.2f}.hdf5', period=5)
+    os.makedirs('training_checkpoints/', exist_ok=True)
+    early_stopping_checkpoint = keras.callbacks.EarlyStopping(patience=5)
+
+
     history = model.fit(train_ds_batch,
                         epochs=EPOCH,
                         validation_data=test_ds_batch,
                         steps_per_epoch=train_steps_per_epoch,
-                        validation_steps=valid_stpes_per_epoch)
-    test_loss, test_accuracy = model.evaluate(test_ds_batch, steps=20)
+                        validation_steps=valid_stpes_per_epoch,
+                        callbacks=[reduce_lr,tensorboard_callback,model_checkpoint_callback,early_stopping_checkpoint])
+
+    test_loss, test_accuracy = model.evaluate(test_ds_batch)
     print("initial loss: {:.2f}".format(test_loss))
     print("initial accuracy: {:.2f}".format(test_accuracy))
+    model.save(MODEL_SAVE)
     return history
 
 def show_loss_accuracy(history):
-    acc=history.history['accyracy']
+    print("start showing!")
+    acc=history.history['accuracy']
     val_acc = history.history['val_accuracy']
 
     loss = history.history['loss']
@@ -85,10 +119,12 @@ def show_loss_accuracy(history):
     plt.plot(val_loss, label='Validation Loss')
     plt.legend(loc='upper right')
     plt.ylabel('Cross Entropy')
-    plt.ylim([0, 1.0])
+    plt.ylim([0, 20])
     plt.title('Training and Validation Loss')
     plt.xlabel('epoch')
     plt.show()
+    plt.savefig('./classification_pr.png')
+
 if __name__ == '__main__':
     history=train()
     show_loss_accuracy(history)
