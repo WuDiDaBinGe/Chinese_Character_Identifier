@@ -3,27 +3,27 @@ import tensorflow as tf
 import tensorflow.keras as keras
 from  tensorflow.keras.callbacks import ReduceLROnPlateau
 from pre_process import pics_dataset
-# import matplotlib as mpl
-# mpl.use('Agg')
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 gpus = tf.config.experimental.list_physical_devices('GPU')
 for gpu in gpus:
   tf.config.experimental.set_memory_growth(gpu, True)
 
-DATASET_ROOT_PATH="F://dataset//hanzi_dataset//dataset2"
+DATASET_ROOT_PATH="/home/wbq/yuxiubin/dataset2_b_2/"
 TRAIN_PATH=DATASET_ROOT_PATH+"//train"
 TEST_PATH=DATASET_ROOT_PATH+"//test"
-MODEL_SAVE="../model_save"
-LOG_DIR="../log"
+MODEL_SAVE="./model_save"
+LOG_DIR="./log"
 
 
-IMG_SIZE=128
-CHANNLES=3
+IMG_SIZE=64
+CHANNLES=1
 NUM_CLASS=100
 BATCH_SIZE=32
-EPOCH=15
+EPOCH=50
 
 
 def change_range(image,label):
@@ -34,13 +34,14 @@ def loadModel(class_nums):
         input_shape=(IMG_SIZE,IMG_SIZE,CHANNLES),
         include_top=False
     )
-    # base_model.load_weights("../models_weights/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.0_224_no_top.h5")
+    #base_model.load_weights("../models_weights/xception_weights_tf_dim_ordering_tf_kernels_notop.h5")
     # Fine tune from this layer onwards
-    fine_tune_at = 129
-    base_model.trainable =True
-    # Freeze all the layers before the `fine_tune_at` layer
-    for layer in base_model.layers[:fine_tune_at]:
-        layer.trainable = False
+
+    base_model.trainable =False
+    # fine_tune_at = 129
+    # # Freeze all the layers before the `fine_tune_at` layer
+    # for layer in base_model.layers[:fine_tune_at]:
+    #     layer.trainable = False
 
     model=keras.Sequential([
         base_model,
@@ -49,7 +50,18 @@ def loadModel(class_nums):
         keras.layers.Dense(class_nums,activation="softmax")
     ])
     return model
+def build_net_003(input_shape, n_classes):
+    model = tf.keras.Sequential([
+        keras.layers.Conv2D(input_shape=input_shape, filters=32, kernel_size=(3, 3), strides=(1, 1),
+                      padding='same', activation='relu'),
+        keras.layers.MaxPool2D(pool_size=(2, 2), padding='same'),
+        keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='same'),
+        keras.layers.MaxPool2D(pool_size=(2, 2), padding='same'),
 
+        keras.layers.Flatten(),
+        keras.layers.Dense(n_classes, activation='softmax')
+    ])
+    return model
 def train():
     # Load Dataset
     train_ds,train_num=pics_dataset.get_dataSet(TRAIN_PATH)
@@ -57,7 +69,7 @@ def train():
     # train_ds=train_ds.map(change_range)
     # test_ds=test_ds.map(change_range)
     # Load Model
-    model=loadModel(NUM_CLASS)
+    model=build_net_003((IMG_SIZE,IMG_SIZE,1),NUM_CLASS)
 
     # set batch—size
     train_ds_batch=pics_dataset.set_batch_shuffle(BATCH_SIZE,train_ds,train_num)
@@ -126,7 +138,7 @@ def show_loss_accuracy(history):
     plt.title('Training and Validation Loss')
     plt.xlabel('epoch')
     plt.show()
-    #plt.savefig('./classification_pr.png')
+    plt.savefig('./classification_pr.png')
 
 if __name__ == '__main__':
     history=train()

@@ -6,18 +6,18 @@ import pathlib
 import random
 DATASET_ROOT_PATH="F://dataset//hanzi_dataset//dataset_character//dataset"
 TRAIN_PATH=DATASET_ROOT_PATH+"//train"
-
 TEST_PATH=DATASET_ROOT_PATH+"//test"
 
 def preprocess_image(image,img_size):
-  image = tf.image.decode_png(image, channels=3)
+  image = tf.image.decode_png(image, channels=1)
+  image=tf.image.convert_image_dtype(image,tf.float32)
   image = tf.image.resize(image, [img_size, img_size])
   image /= 255.0  # normalize to [0,1] range
   return image
 
 def load_and_preprocess_image(path):
   image = tf.io.read_file(path)
-  return preprocess_image(image,img_size=128)
+  return preprocess_image(image,img_size=64)
 
 def read_imgs_path_labels(path):
     '''
@@ -36,8 +36,6 @@ def read_imgs_path_labels(path):
     label_to_index=dict((name,index) for index,name in enumerate(label_names))
     # 得到图片的标签索引
     all_image_labels=[label_to_index[pathlib.Path(path_).parent.name] for path_ in all_image_paths]
-    print(all_image_paths[:4])
-    print(all_image_labels[:4])
     return all_image_paths,all_image_labels
 
 def create_DataSet(all_img_paths,all_img_labels):
@@ -45,7 +43,7 @@ def create_DataSet(all_img_paths,all_img_labels):
     print(data_count)
     path_ds=tf.data.Dataset.from_tensor_slices(all_img_paths)
     image_ds=path_ds.map(load_and_preprocess_image,num_parallel_calls=AUTOTUNE)
-    label_ds=tf.data.Dataset.from_tensor_slices(tf.cast(all_img_labels,tf.int32))
+    label_ds=tf.data.Dataset.from_tensor_slices(tf.cast(all_img_labels,tf.int64))
     image_label_ds=tf.data.Dataset.zip((image_ds,label_ds))
     return image_label_ds,data_count
 
@@ -67,6 +65,7 @@ def get_dataSet(path):
     all_image_path,all_labels=read_imgs_path_labels(path)
     ds, count = create_DataSet(all_image_path, all_labels)
     return ds,count
+
 if __name__ == '__main__':
     ds,count=get_dataSet(TEST_PATH)
     ds=set_batch_shuffle(32,ds,count)

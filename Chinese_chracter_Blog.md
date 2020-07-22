@@ -16,6 +16,8 @@
 
 
 
+pb模型测试结果如下：
+
 14.png
 ['津\r', '荤\r', '晦\r', '晤\r', '晕\r']
 21.png
@@ -27,4 +29,6 @@
 46.png
 ['津\r', '碎\r', '碑\r', '碗\r', '碘\r']
 59.png
-['津\r', '碗\r', '碘\r', '碟\r', '碧\r']
+['津\r', '碗\r', '碘\r', '碟\r', '碧\r'
+
+![image-20200722100420454](C:\Users\len\AppData\Roaming\Typora\typora-user-images\image-20200722100420454.png)
