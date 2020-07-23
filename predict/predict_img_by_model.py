@@ -1,7 +1,7 @@
 import sys
 import codecs
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
-
+sys.path.append("../")
 import os
 import tensorflow as tf
 from pre_process import pics_dataset
@@ -52,4 +52,4 @@ def predict_with_model(pics_path,model_path):
 
 
 if __name__ == '__main__':
-    predict_with_model("./pics","../model_save")
+    predict_with_model("./test","../model_save_w_b")

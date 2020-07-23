@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.append("../")
 import tensorflow as tf
 import tensorflow.keras as keras
 from  tensorflow.keras.callbacks import ReduceLROnPlateau
@@ -12,16 +14,16 @@ gpus = tf.config.experimental.list_physical_devices('GPU')
 for gpu in gpus:
   tf.config.experimental.set_memory_growth(gpu, True)
 
-DATASET_ROOT_PATH="/home/wbq/yuxiubin/dataset2_b_2/"
+DATASET_ROOT_PATH="/home/wbq/code/singleChar/CPS-OCR-Engine/ocr/dataset1/"
 TRAIN_PATH=DATASET_ROOT_PATH+"//train"
 TEST_PATH=DATASET_ROOT_PATH+"//test"
-MODEL_SAVE="./model_save"
+MODEL_SAVE="./model_save_w_b_all"
 LOG_DIR="./log"
 
 
-IMG_SIZE=64
+IMG_SIZE=128
 CHANNLES=1
-NUM_CLASS=100
+NUM_CLASS=3755
 BATCH_SIZE=32
 EPOCH=50
 
@@ -37,11 +39,11 @@ def loadModel(class_nums):
     #base_model.load_weights("../models_weights/xception_weights_tf_dim_ordering_tf_kernels_notop.h5")
     # Fine tune from this layer onwards
 
-    base_model.trainable =False
-    # fine_tune_at = 129
-    # # Freeze all the layers before the `fine_tune_at` layer
-    # for layer in base_model.layers[:fine_tune_at]:
-    #     layer.trainable = False
+    base_model.trainable =True
+    fine_tune_at = len(base_model.layers)-5
+    # Freeze all the layers before the `fine_tune_at` layer
+    for layer in base_model.layers[:fine_tune_at]:
+        layer.trainable = False
 
     model=keras.Sequential([
         base_model,
@@ -50,6 +52,7 @@ def loadModel(class_nums):
         keras.layers.Dense(class_nums,activation="softmax")
     ])
     return model
+
 def build_net_003(input_shape, n_classes):
     model = tf.keras.Sequential([
         keras.layers.Conv2D(input_shape=input_shape, filters=32, kernel_size=(3, 3), strides=(1, 1),
@@ -62,6 +65,7 @@ def build_net_003(input_shape, n_classes):
         keras.layers.Dense(n_classes, activation='softmax')
     ])
     return model
+
 def train():
     # Load Dataset
     train_ds,train_num=pics_dataset.get_dataSet(TRAIN_PATH)
@@ -69,15 +73,14 @@ def train():
     # train_ds=train_ds.map(change_range)
     # test_ds=test_ds.map(change_range)
     # Load Model
-    model=build_net_003((IMG_SIZE,IMG_SIZE,1),NUM_CLASS)
+    # model=loadModel(NUM_CLASS)
+    model=build_net_003((IMG_SIZE,IMG_SIZE,CHANNLES),NUM_CLASS)
 
     # set batch—size
     train_ds_batch=pics_dataset.set_batch_shuffle(BATCH_SIZE,train_ds,train_num)
     test_ds_batch=pics_dataset.set_batch_shuffle(BATCH_SIZE,test_ds,test_num)
     # LR Delay
     sgd=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-    # LR reduce with epoch
-    reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.1,patience=5, mode='auto')
 
 
     model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
@@ -96,8 +99,9 @@ def train():
     model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
         'training_checkpoints/weights.{epoch:02d}-{val_loss:.2f}.hdf5', period=5)
     os.makedirs('training_checkpoints/', exist_ok=True)
-    early_stopping_checkpoint = keras.callbacks.EarlyStopping(patience=5)
-
+    early_stopping_checkpoint = keras.callbacks.EarlyStopping(patience=10)
+    # LR reduce with epoch
+    reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.1, patience=5, mode='auto')
 
     history = model.fit(train_ds_batch,
                         epochs=EPOCH,
@@ -138,7 +142,7 @@ def show_loss_accuracy(history):
     plt.title('Training and Validation Loss')
     plt.xlabel('epoch')
     plt.show()
-    plt.savefig('./classification_pr.png')
+    plt.savefig('./classification_pr_w_b_all.png')
 
 if __name__ == '__main__':
     history=train()

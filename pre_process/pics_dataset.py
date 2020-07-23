@@ -4,14 +4,17 @@ AUTOTUNE = tf.data.experimental.AUTOTUNE
 import os
 import pathlib
 import random
-DATASET_ROOT_PATH="F://dataset//hanzi_dataset//dataset_character//dataset"
+DATASET_ROOT_PATH="/home/wbq/yuxiubin/dataset_w_b_100/"
 TRAIN_PATH=DATASET_ROOT_PATH+"//train"
 TEST_PATH=DATASET_ROOT_PATH+"//test"
 
 def preprocess_image(image,img_size):
   image = tf.image.decode_png(image, channels=1)
-  image=tf.image.convert_image_dtype(image,tf.float32)
+  # 对数据进行归一化，将image转到（0，1）的范围内
+  #image=tf.image.convert_image_dtype(image,tf.float32)
+
   image = tf.image.resize(image, [img_size, img_size])
+
   image /= 255.0  # normalize to [0,1] range
   return image
 
@@ -52,7 +55,7 @@ def set_batch_shuffle(batch_size,ds,count):
     img_ds = ds.cache(filename='./cache.tf-data')
     # 将数据集完全打乱
     img_ds = ds.apply(
-        tf.data.experimental.shuffle_and_repeat(buffer_size=count//3))
+        tf.data.experimental.shuffle_and_repeat(buffer_size=count//4))
     # 设置batch 方便使用prefetch读取
     img_ds=img_ds.batch(batch_size)
     img_ds=img_ds.prefetch(1)
