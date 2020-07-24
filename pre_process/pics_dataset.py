@@ -4,6 +4,8 @@ AUTOTUNE = tf.data.experimental.AUTOTUNE
 import os
 import pathlib
 import random
+import cv2
+import numpy as np
 DATASET_ROOT_PATH="/home/wbq/yuxiubin/dataset_w_b_100/"
 TRAIN_PATH=DATASET_ROOT_PATH+"//train"
 TEST_PATH=DATASET_ROOT_PATH+"//test"
@@ -12,11 +14,14 @@ def preprocess_image(image,img_size):
   image = tf.image.decode_png(image, channels=1)
   # 对数据进行归一化，将image转到（0，1）的范围内
   #image=tf.image.convert_image_dtype(image,tf.float32)
+  # 使用OpenCV进行二值化
+  _, img_binary = cv2.threshold(image.numpy(), 200, 255, cv2.THRESH_BINARY)
+  # 扩展通道要不然shape为(size,size)
+  img_binary = np.expand_dims(img_binary, axis=-1)
+  img_binary = tf.image.resize(img_binary, [img_size, img_size])
 
-  image = tf.image.resize(image, [img_size, img_size])
-
-  image /= 255.0  # normalize to [0,1] range
-  return image
+  img_binary /= 255.0  # normalize to [0,1] range
+  return img_binary
 
 def load_and_preprocess_image(path):
   image = tf.io.read_file(path)

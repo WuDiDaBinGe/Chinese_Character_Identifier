@@ -6,6 +6,7 @@ import os
 import tensorflow as tf
 from pre_process import pics_dataset
 import pickle
+import cv2
 # 获取汉字label映射表
 def get_label_dict():
     f=open('../chinese_labels','rb')
@@ -43,7 +44,7 @@ def predict_with_model(pics_path,model_path):
     for path in paths:
         full_path=os.path.join(pics_path,path)
         img_tensor=pics_dataset.load_and_preprocess_image(full_path)
-
+        _,img_tensor=cv2.threshold(img_tensor.numpy(),200,255,cv2.THRESH_BINARY)
         # 扩充一维增加 batch,h,w,channels
         img_tensor=tf.expand_dims(img_tensor,0)
         res=model.predict(img_tensor)
@@ -52,4 +53,4 @@ def predict_with_model(pics_path,model_path):
 
 
 if __name__ == '__main__':
-    predict_with_model("./test","../model_save_w_b")
+    predict_with_model("./test","../model_save_w_b_all")
