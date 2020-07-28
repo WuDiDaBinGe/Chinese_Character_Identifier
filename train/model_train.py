@@ -91,7 +91,7 @@ def train():
     sgd=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 
 
-    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.01),
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
                   loss="sparse_categorical_crossentropy",
                   metrics=["accuracy"],
                   )
@@ -114,8 +114,6 @@ def train():
     history = model.fit(train_ds_batch,
                         epochs=EPOCH,
                         steps_per_epoch=train_steps_per_epoch,
-                        validation_data=train_ds_batch,
-                        validation_steps=train_steps_per_epoch,
                         callbacks=[reduce_lr,early_stopping_checkpoint])
 
     # test_loss, test_accuracy = model.evaluate(test_ds_batch,steps=valid_stpes_per_epoch)

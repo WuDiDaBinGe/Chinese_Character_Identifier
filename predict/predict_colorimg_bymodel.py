@@ -7,13 +7,17 @@ import tensorflow as tf
 from pre_process import pics_dataset
 import pickle
 import cv2
+TRAIN_PATH="/home/wbq/yuxiubin/data_dianxuan/data/train"
 # 获取汉字label映射表
-def get_label_dict():
-    f=open('../chinese_labels','rb')
-    character_dict = pickle.load(f)
-    print(character_dict)
-    f.close()
-    return character_dict
+def get_label_dict(path):
+    _,_,dict=pics_dataset.get_dataSet(path)
+    return dict
+# 将unicode编码转成汉字
+def unicode_to_chinese(unicode_str):
+    str_code = unicode_str[2:]
+    str_code = '\\u' + str_code
+    hanzi = str_code.encode('utf-8').decode("unicode_escape")
+    return hanzi
 
 def get_TOP_5(res,dict):
     # 从小到大排序 最大的概率在最后几位
@@ -22,7 +26,9 @@ def get_TOP_5(res,dict):
     pro_result=[]
     top_5_index=list(reversed(top_5_index))
     for index in top_5_index:
-        res_result.append(dict[index])
+        print(dict[index])
+        chinese=unicode_to_chinese(dict[index])
+        res_result.append(chinese)
         pro_result.append(res[0][index])
     print(res_result)
     print(pro_result)
@@ -36,8 +42,10 @@ def load_test_dataset(dataset_test_path):
     test_ds, test_num = pics_dataset.get_dataSet(dataset_test_path)
     return test_ds,test_num
 
-def model_test(test_data, model_path):
-    dict=get_label_dict()
+def model_predict(pics_path, model_path):
+    label_to_unicode_dict=get_label_dict(TRAIN_PATH)
+    # key-value转换
+    index_to_chara_dict = {index: name for name, index in label_to_unicode_dict.items()}
     # load model
     # 加载模型
     model = tf.keras.models.load_model(model_path)
@@ -54,9 +62,10 @@ def model_test(test_data, model_path):
         img_tensor=tf.expand_dims(img_tensor,0)
         res=model.predict(img_tensor)
         print(path)
-        get_TOP_5(res,dict)
+        get_TOP_5(res,index_to_chara_dict)
 
 
 if __name__ == '__main__':
-    #
-    model_test("/home/wbq/code/singleChar/CPS-OCR-Engine/ocr/dataset1/test/00016", "../model_save_w_b_all")
+    dict=get_label_dict(TRAIN_PATH)
+
+    model_predict('./predict/color_characters/','./model_save')
