@@ -1,0 +1,62 @@
+import sys
+import codecs
+sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
+sys.path.append("../")
+import os
+import tensorflow as tf
+from pre_process import pics_dataset
+import pickle
+import cv2
+# 获取汉字label映射表
+def get_label_dict():
+    f=open('../chinese_labels','rb')
+    character_dict = pickle.load(f)
+    print(character_dict)
+    f.close()
+    return character_dict
+
+def get_TOP_5(res,dict):
+    # 从小到大排序 最大的概率在最后几位
+    top_5_index = res.argsort(1)[0][-5:]
+    res_result = []
+    pro_result=[]
+    top_5_index=list(reversed(top_5_index))
+    for index in top_5_index:
+        res_result.append(dict[index])
+        pro_result.append(res[0][index])
+    print(res_result)
+    print(pro_result)
+    return res_result
+
+def get_Top_1(res,dict):
+    top_index = res.argmax(1)[0]
+    return dict[top_index]
+
+def load_test_dataset(dataset_test_path):
+    test_ds, test_num = pics_dataset.get_dataSet(dataset_test_path)
+    return test_ds,test_num
+
+def model_test(test_data, model_path):
+    dict=get_label_dict()
+    # load model
+    # 加载模型
+    model = tf.keras.models.load_model(model_path)
+    # model.summary()
+
+    # load image
+    paths=os.listdir(pics_path)
+    paths.sort()
+    print(paths)
+    for path in paths:
+        full_path=os.path.join(pics_path,path)
+        img_tensor=pics_dataset.load_and_preprocess_image(full_path)
+        # 扩充一维增加 batch,h,w,channels
+        img_tensor=tf.expand_dims(img_tensor,0)
+        res=model.predict(img_tensor)
+        print(path)
+        get_TOP_5(res,dict)
+
+
+if __name__ == '__main__':
+    #
+    model_test("/home/wbq/code/singleChar/CPS-OCR-Engine/ocr/dataset1/test/00016", "../model_save_w_b_all")

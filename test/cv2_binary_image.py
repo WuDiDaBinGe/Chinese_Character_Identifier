@@ -10,11 +10,16 @@ def binary_images(in_path,out_path):
     for path in paths:
         full_path=os.path.join(in_path,path)
         image=cv2.imread(full_path)
+        for  i in range(image.shape[0]):
+            for  j in range(image.shape[1]):
+                (b,g,r)=image[i,j]
+                if b>250:
+                    image[i,j]=(255,255,255)
 
-        _,binary_image=cv2.threshold(image,220,255,cv2.THRESH_BINARY)
-        cv2.imwrite(out_path+"//"+str(num)+".png", binary_image)
+        #_,binary_image=cv2.threshold(image,220,255,cv2.THRESH_BINARY)
+        cv2.imwrite(out_path+"//"+str(num)+".png", image)
         num += 1
-        cv2.imshow("img"+str(num),binary_image)
+        cv2.imshow("img"+str(num),image)
         cv2.waitKey(0)
 
 

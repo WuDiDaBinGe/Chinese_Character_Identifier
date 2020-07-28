@@ -1,16 +1,9 @@
-迁移方式：
+## 方式一：迁移方式
 
-1. 方式一：只训练特征提取后的两层，EPOCH=10，BATCH_SIZE=16,训练结果为，keras默认学习率=0.001，此时的训练集和验证集上的loss和准确率如下：
-
-   
-
-   
-
-2. 
+​	只训练特征提取后的两层，EPOCH=10，BATCH_SIZE=16,训练结果为，keras默认学习率=0.001，此时的训练集和验证集上的loss和准确率如下：
 
 
-
-使用迁移时，开放训练卷积层时，需要在base_model后紧接着进行，添加上新的层后，model会把base_model看成是一个层。
+使用迁移时，开放训练卷积层时，需要在base_model后紧接着进行，添加上新的层后，model会把base_model看成是一个层。在黑底白字上的效果如下：
 
 pb模型测试结果如下：
 
@@ -27,9 +20,13 @@ pb模型测试结果如下：
 59.png
 ['津\r', '碗\r', '碘\r', '碟\r', '碧\r'
 
-![image-20200722100420454](C:\Users\len\AppData\Roaming\Typora\typora-user-images\image-20200722100420454.png)
+![image-20200722100420454](./image-20200722100420454.png)
 
-没有使用很深的网络分类100类别的汉字(黑底白字),出现了不错的效果。模型结构如下：
+​	可以看到此时网络出现了**过拟合**的问题。
+
+## 方式二：自建网络
+
+没有使用很深的网络分类汉字(白底黑字),出现了不错的效果。模型结构如下：
 
 ```python
 def build_net_003(input_shape, n_classes):
@@ -48,7 +45,7 @@ def build_net_003(input_shape, n_classes):
 
 思考：为什么有时很大很深的网络效果不好，反而不深较为简单的网络表现的却很不错呢？
 
-
+​	可能是网络回退问题。
 
 
 
@@ -74,7 +71,6 @@ image=tf.image.convert_image_dtype(image,tf.float32)
 image = tf.image.resize(image, [64, 64])
 ```
 
+所以黑底的照片在进行了reszie->covert->/255后依然能保留白色的特征，
 
-
-所以黑底的照片在进行了reszie->covert-》/255后依然能保留白色的特征，
 

@@ -6,26 +6,28 @@ import pathlib
 import random
 import cv2
 import numpy as np
-DATASET_ROOT_PATH="/home/wbq/yuxiubin/dataset_w_b_100/"
-TRAIN_PATH=DATASET_ROOT_PATH+"//train"
-TEST_PATH=DATASET_ROOT_PATH+"//test"
+
+DATASET_ROOT_PATH="F://dataset//hanzi_dataset//data_dianxuan//data//train"
+
+def binary_image(img):
+    img=img.numpy()
+    mask=img>=200
+    img[mask]=255
+    return img
 
 def preprocess_image(image,img_size):
-  image = tf.image.decode_png(image, channels=1)
-  # 对数据进行归一化，将image转到（0，1）的范围内
-  #image=tf.image.convert_image_dtype(image,tf.float32)
-  # 使用OpenCV进行二值化
-  _, img_binary = cv2.threshold(image.numpy(), 200, 255, cv2.THRESH_BINARY)
-  # 扩展通道要不然shape为(size,size)
-  img_binary = np.expand_dims(img_binary, axis=-1)
-  img_binary = tf.image.resize(img_binary, [img_size, img_size])
+    image = tf.image.decode_jpeg(image, channels=3)
+    image = tf.image.resize(image, [img_size, img_size])
+    # 对数据进行归一化，将image转到（0，1）的范围内
+    #image=tf.image.convert_image_dtype(image,tf.float32)
 
-  img_binary /= 255.0  # normalize to [0,1] range
-  return img_binary
+    image /= 255.0  # normalize to [0,1] range
+    return image
 
 def load_and_preprocess_image(path):
   image = tf.io.read_file(path)
   return preprocess_image(image,img_size=64)
+
 
 def read_imgs_path_labels(path):
     '''
@@ -44,7 +46,7 @@ def read_imgs_path_labels(path):
     label_to_index=dict((name,index) for index,name in enumerate(label_names))
     # 得到图片的标签索引
     all_image_labels=[label_to_index[pathlib.Path(path_).parent.name] for path_ in all_image_paths]
-    return all_image_paths,all_image_labels
+    return all_image_paths,all_image_labels,label_to_index
 
 def create_DataSet(all_img_paths,all_img_labels):
     data_count=len(all_img_paths)
@@ -60,7 +62,7 @@ def set_batch_shuffle(batch_size,ds,count):
     img_ds = ds.cache(filename='./cache.tf-data')
     # 将数据集完全打乱
     img_ds = ds.apply(
-        tf.data.experimental.shuffle_and_repeat(buffer_size=count//4))
+        tf.data.experimental.shuffle_and_repeat(buffer_size=count//2))
     # 设置batch 方便使用prefetch读取
     img_ds=img_ds.batch(batch_size)
     img_ds=img_ds.prefetch(1)
@@ -70,12 +72,13 @@ def change_range(image,label):
     return 2*image-1,label
 
 def get_dataSet(path):
-    all_image_path,all_labels=read_imgs_path_labels(path)
+    all_image_path,all_labels,label_name_dict=read_imgs_path_labels(path)
     ds, count = create_DataSet(all_image_path, all_labels)
-    return ds,count
+    return ds,count,label_name_dict
 
 if __name__ == '__main__':
-    ds,count=get_dataSet(TEST_PATH)
+    ds,count,dict=get_dataSet(DATASET_ROOT_PATH)
+    print(dict)
     ds=set_batch_shuffle(32,ds,count)
     for image_batch, label_batch in ds.take(1):
         pass

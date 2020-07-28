@@ -1,44 +1,51 @@
 import os
 import sys
+import codecs
+sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 sys.path.append("../")
 import tensorflow as tf
 import tensorflow.keras as keras
 from  tensorflow.keras.callbacks import ReduceLROnPlateau
 from pre_process import pics_dataset
+from efficientnet.tfkeras import EfficientNetB4
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 gpus = tf.config.experimental.list_physical_devices('GPU')
 for gpu in gpus:
   tf.config.experimental.set_memory_growth(gpu, True)
 
-DATASET_ROOT_PATH="/home/wbq/code/singleChar/CPS-OCR-Engine/ocr/dataset1/"
-TRAIN_PATH=DATASET_ROOT_PATH+"//train"
+
+# /home/wbq/code/singleChar/CPS-OCR-Engine/ocr/dataset_more_w_b/dataset2/
+DATASET_ROOT_PATH="/home/wbq/code/singleChar/CPS-OCR-Engine/ocr/dataset2/"
+# "F://dataset//hanzi_dataset//data_dianxuan//data//train"
+TRAIN_PATH="/home/wbq/yuxiubin/data_dianxuan/data/train"
 TEST_PATH=DATASET_ROOT_PATH+"//test"
-MODEL_SAVE="./model_save_w_b_all"
-LOG_DIR="./log"
+MODEL_SAVE="./model_save"
+LOG_DIR="../log"
 
 
 IMG_SIZE=64
-CHANNLES=1
-NUM_CLASS=3755
+CHANNLES=3
+NUM_CLASS=2181
 BATCH_SIZE=128
-EPOCH=50
+EPOCH=2000
 
 
 def change_range(image,label):
     return 2*image-1,label
 
 def loadModel(class_nums):
-    base_model=keras.applications.Xception(
-        input_shape=(IMG_SIZE,IMG_SIZE,CHANNLES),
-        include_top=False
-    )
+    base_model=EfficientNetB4(input_shape=(IMG_SIZE,IMG_SIZE,CHANNLES),
+        include_top=False,weights='./models_weights/efficientnet-b4_weights_tf_dim_ordering_tf_kernels_autoaugment_notop.h5')
+    # base_model=keras.applications.Xception(
+    #     input_shape=(IMG_SIZE,IMG_SIZE,CHANNLES),
+    #     include_top=False
+    # )
     #base_model.load_weights("../models_weights/xception_weights_tf_dim_ordering_tf_kernels_notop.h5")
     # Fine tune from this layer onwards
-
+    # base_model.summary()
     base_model.trainable =True
     fine_tune_at = len(base_model.layers)-5
     # Freeze all the layers before the `fine_tune_at` layer
@@ -68,22 +75,23 @@ def build_net_003(input_shape, n_classes):
 
 def train():
     # Load Dataset
-    train_ds,train_num=pics_dataset.get_dataSet(TRAIN_PATH)
-    test_ds,test_num=pics_dataset.get_dataSet(TEST_PATH)
-    # train_ds=train_ds.map(change_range)
+    train_ds,train_num,label_name_dict=pics_dataset.get_dataSet(TRAIN_PATH)
+    print("shuliang is :",train_num)
+    # test_ds,test_num=pics_dataset.get_dataSet(TEST_PATH)
+    train_ds=train_ds.map(change_range)
     # test_ds=test_ds.map(change_range)
     # Load Model
-    # model=loadModel(NUM_CLASS)
-    model=build_net_003((IMG_SIZE,IMG_SIZE,CHANNLES),NUM_CLASS)
+    model=loadModel(NUM_CLASS)
+    #model=build_net_003((IMG_SIZE,IMG_SIZE,CHANNLES),NUM_CLASS)
 
     # set batch—size
     train_ds_batch=pics_dataset.set_batch_shuffle(BATCH_SIZE,train_ds,train_num)
-    test_ds_batch=pics_dataset.set_batch_shuffle(BATCH_SIZE,test_ds,test_num)
+    # test_ds_batch=pics_dataset.set_batch_shuffle(BATCH_SIZE,test_ds,test_num)
     # LR Delay
     sgd=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 
 
-    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.01),
                   loss="sparse_categorical_crossentropy",
                   metrics=["accuracy"],
                   )
@@ -91,7 +99,7 @@ def train():
     model.summary()
 
     train_steps_per_epoch=tf.math.ceil(train_num/BATCH_SIZE).numpy()
-    valid_stpes_per_epoch=tf.math.ceil(test_num/BATCH_SIZE).numpy()
+    # valid_stpes_per_epoch=tf.math.ceil(test_num/BATCH_SIZE).numpy()
 
     # Creating Keras callbacks
     tensorboard_callback = keras.callbacks.TensorBoard(
@@ -105,14 +113,14 @@ def train():
 
     history = model.fit(train_ds_batch,
                         epochs=EPOCH,
-                        validation_data=test_ds_batch,
                         steps_per_epoch=train_steps_per_epoch,
-                        validation_steps=valid_stpes_per_epoch,
+                        validation_data=train_ds_batch,
+                        validation_steps=train_steps_per_epoch,
                         callbacks=[reduce_lr,early_stopping_checkpoint])
 
-    test_loss, test_accuracy = model.evaluate(test_ds_batch,steps=20)
-    print("initial loss: {:.2f}".format(test_loss))
-    print("initial accuracy: {:.2f}".format(test_accuracy))
+    # test_loss, test_accuracy = model.evaluate(test_ds_batch,steps=valid_stpes_per_epoch)
+    # print("initial loss: {:.2f}".format(test_loss))
+    # print("initial accuracy: {:.2f}".format(test_accuracy))
     model.save(MODEL_SAVE)
     return history
 
@@ -142,7 +150,7 @@ def show_loss_accuracy(history):
     plt.title('Training and Validation Loss')
     plt.xlabel('epoch')
     plt.show()
-    plt.savefig('./classification_pr_w_b_all.png')
+    plt.savefig('./classification_color.png')
 
 if __name__ == '__main__':
     history=train()
