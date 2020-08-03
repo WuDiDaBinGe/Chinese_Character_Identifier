@@ -30,7 +30,7 @@ IMG_SIZE=64
 CHANNLES=3
 NUM_CLASS=2181
 BATCH_SIZE=128
-EPOCH=2000
+EPOCH=1500
 
 
 def change_range(image,label):
@@ -81,8 +81,8 @@ def train():
     train_ds=train_ds.map(change_range)
     # test_ds=test_ds.map(change_range)
     # Load Model
-    model=loadModel(NUM_CLASS)
-    #model=build_net_003((IMG_SIZE,IMG_SIZE,CHANNLES),NUM_CLASS)
+    #model=loadModel(NUM_CLASS)
+    model=build_net_003((IMG_SIZE,IMG_SIZE,CHANNLES),NUM_CLASS)
 
     # set batch—size
     train_ds_batch=pics_dataset.set_batch_shuffle(BATCH_SIZE,train_ds,train_num)

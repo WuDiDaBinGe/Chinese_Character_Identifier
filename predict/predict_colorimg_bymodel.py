@@ -26,7 +26,6 @@ def get_TOP_5(res,dict):
     pro_result=[]
     top_5_index=list(reversed(top_5_index))
     for index in top_5_index:
-        print(dict[index])
         chinese=unicode_to_chinese(dict[index])
         res_result.append(chinese)
         pro_result.append(res[0][index])

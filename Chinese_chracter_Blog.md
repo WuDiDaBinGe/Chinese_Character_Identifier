@@ -74,3 +74,11 @@ image = tf.image.resize(image, [64, 64])
 所以黑底的照片在进行了reszie->covert->/255后依然能保留白色的特征，
 
 
+
+
+
+## 彩色图片分类：
+
+方案：使用迁移学习，迁移EfficiencientNetB4 只训练最后5层，设置学习率为0.001，batch_size=128,输入图像大小为64*64，epoch=100。训练结果为：
+
+![image-20200728190513404](C:\Users\len\AppData\Roaming\Typora\typora-user-images\image-20200728190513404.png)
