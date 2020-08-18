@@ -18,17 +18,18 @@ for gpu in gpus:
 
 
 # /home/wbq/code/singleChar/CPS-OCR-Engine/ocr/dataset_more_w_b/dataset2/
-DATASET_ROOT_PATH="/home/wbq/code/singleChar/CPS-OCR-Engine/ocr/dataset2/"
+DATASET_ROOT_PATH="/home/wbq/yuxiubin/dataset_yes_15below_own_unicode/dataset_above_500/"
 # "F://dataset//hanzi_dataset//data_dianxuan//data//train"
-TRAIN_PATH="/home/wbq/yuxiubin/data_dianxuan/data/train"
-TEST_PATH=DATASET_ROOT_PATH+"//test"
-MODEL_SAVE="./model_save"
-LOG_DIR="../log"
+TRAIN_PATH=DATASET_ROOT_PATH+"/train/"
+TEST_PATH=DATASET_ROOT_PATH+"/test/"
+MODEL_SAVE="./model_save_20200817_net003"
+LOG_DIR="./log"
+PIC_NAME='./classification_own_data_20200818_M5.png'
 
 
 IMG_SIZE=64
 CHANNLES=3
-NUM_CLASS=2181
+NUM_CLASS=1233
 BATCH_SIZE=128
 EPOCH=1500
 
@@ -72,21 +73,37 @@ def build_net_003(input_shape, n_classes):
         keras.layers.Dense(n_classes, activation='softmax')
     ])
     return model
+def build_M5_HWDB(input_shape,n_classes):
+    model=tf.keras.Sequential([
+        keras.layers.Conv2D(input_shape=input_shape,filters=64,kernel_size=(3,3),
+                            activation='relu'),
+        keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2,2)),
+        keras.layers.Conv2D(filters=128,kernel_size=(3,3)),
+        keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2,2)),
+        keras.layers.Conv2D(filters=256,kernel_size=(3,3)),
+        keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2,2)),
+        keras.layers.Flatten(),
+        keras.layers.Dropout(0.5),
+        keras.layers.Dense(1024),
+        keras.layers.Dropout(0.5),
+        keras.layers.Dense(n_classes,activation='softmax')
+    ])
+    return model
 
 def train():
     # Load Dataset
     train_ds,train_num,label_name_dict=pics_dataset.get_dataSet(TRAIN_PATH)
     print("shuliang is :",train_num)
-    # test_ds,test_num=pics_dataset.get_dataSet(TEST_PATH)
+    test_ds,test_num,_ =pics_dataset.get_dataSet(TEST_PATH)
     train_ds=train_ds.map(change_range)
-    # test_ds=test_ds.map(change_range)
+    test_ds=test_ds.map(change_range)
     # Load Model
-    #model=loadModel(NUM_CLASS)
-    model=build_net_003((IMG_SIZE,IMG_SIZE,CHANNLES),NUM_CLASS)
+    model=loadModel(NUM_CLASS)
+    #model=build_net_003((IMG_SIZE,IMG_SIZE,CHANNLES),NUM_CLASS)
 
     # set batch—size
     train_ds_batch=pics_dataset.set_batch_shuffle(BATCH_SIZE,train_ds,train_num)
-    # test_ds_batch=pics_dataset.set_batch_shuffle(BATCH_SIZE,test_ds,test_num)
+    test_ds_batch=pics_dataset.set_batch_shuffle(BATCH_SIZE,test_ds,test_num)
     # LR Delay
     sgd=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 
@@ -99,26 +116,28 @@ def train():
     model.summary()
 
     train_steps_per_epoch=tf.math.ceil(train_num/BATCH_SIZE).numpy()
-    # valid_stpes_per_epoch=tf.math.ceil(test_num/BATCH_SIZE).numpy()
+    valid_stpes_per_epoch=tf.math.ceil(test_num/BATCH_SIZE).numpy()
 
     # Creating Keras callbacks
     tensorboard_callback = keras.callbacks.TensorBoard(
         log_dir=LOG_DIR, histogram_freq=1)
     model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
-        'training_checkpoints/weights.{epoch:02d}-{val_loss:.2f}.hdf5', period=5)
-    os.makedirs('training_checkpoints/', exist_ok=True)
-    early_stopping_checkpoint = keras.callbacks.EarlyStopping(patience=10)
+        'training_checkpoints_net003/weights.{epoch:02d}-{val_loss:.2f}.hdf5', period=5)
+    os.makedirs('training_checkpoints_net003/', exist_ok=True)
+    early_stopping_checkpoint = keras.callbacks.EarlyStopping(patience=15)
     # LR reduce with epoch
-    reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.1, patience=5, mode='auto')
+    reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.1, patience=4, mode='auto')
 
     history = model.fit(train_ds_batch,
                         epochs=EPOCH,
                         steps_per_epoch=train_steps_per_epoch,
-                        callbacks=[reduce_lr,early_stopping_checkpoint])
+                        validation_data=test_ds_batch,
+                        validation_steps=valid_stpes_per_epoch,
+                        callbacks=[tensorboard_callback,model_checkpoint_callback,reduce_lr,early_stopping_checkpoint])
 
-    # test_loss, test_accuracy = model.evaluate(test_ds_batch,steps=valid_stpes_per_epoch)
-    # print("initial loss: {:.2f}".format(test_loss))
-    # print("initial accuracy: {:.2f}".format(test_accuracy))
+    test_loss, test_accuracy = model.evaluate(test_ds_batch,steps=valid_stpes_per_epoch)
+    print("initial loss: {:.2f}".format(test_loss))
+    print("initial accuracy: {:.2f}".format(test_accuracy))
     model.save(MODEL_SAVE)
     return history
 
@@ -148,7 +167,7 @@ def show_loss_accuracy(history):
     plt.title('Training and Validation Loss')
     plt.xlabel('epoch')
     plt.show()
-    plt.savefig('./classification_color.png')
+    plt.savefig(PIC_NAME)
 
 if __name__ == '__main__':
     history=train()

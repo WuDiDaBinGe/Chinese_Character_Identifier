@@ -7,7 +7,7 @@ import random
 import cv2
 import numpy as np
 
-DATASET_ROOT_PATH="F://dataset//hanzi_dataset//data_dianxuan//data//train"
+DATASET_ROOT_PATH="/home/wbq/yuxiubin/dataset_yes_15below_own_unicode/dataset_above_500/train"
 
 def binary_image(img):
     img=img.numpy()

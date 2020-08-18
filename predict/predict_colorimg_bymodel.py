@@ -7,13 +7,15 @@ import tensorflow as tf
 from pre_process import pics_dataset
 import pickle
 import cv2
-TRAIN_PATH="/home/wbq/yuxiubin/data_dianxuan/data/train"
+TRAIN_PATH="/home/wbq/yuxiubin/dataset_yes_15below_own_unicode/train_character_dataset_yes_15below/"
 # 获取汉字label映射表
 def get_label_dict(path):
     _,_,dict=pics_dataset.get_dataSet(path)
     return dict
 # 将unicode编码转成汉字
 def unicode_to_chinese(unicode_str):
+    if unicode_str=="None":
+        return "None"
     str_code = unicode_str[2:]
     str_code = '\\u' + str_code
     hanzi = str_code.encode('utf-8').decode("unicode_escape")
@@ -67,4 +69,4 @@ def model_predict(pics_path, model_path):
 if __name__ == '__main__':
     dict=get_label_dict(TRAIN_PATH)
 
-    model_predict('./predict/color_characters/','./model_save')
+    model_predict('./predict/color_characters/','./model_save_20200817_EfficientNet')

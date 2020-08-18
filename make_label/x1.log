@@ -1,0 +1,15 @@
+2020-08-04 10:41:24 AM - urllib3.connectionpool - DEBUG -connectionpool:  Starting new HTTP connection (1): 127.0.0.1:4780
+2020-08-04 10:41:31 AM - urllib3.connectionpool - DEBUG -connectionpool:  http://127.0.0.1:4780 "POST http://upload.chaojiying.net/Upload/Processing.php HTTP/1.1" 200 None
+2020-08-04 10:41:31 AM - root - INFO -chaojiying_API:  characters0.jpg,{'err_no': 0, 'err_str': 'OK', 'pic_id': '9112710414617400019', 'pic_str': '朗', 'md5': '418263669a6b6864a486301b1ab44942'}
+2020-08-04 10:41:31 AM - urllib3.connectionpool - DEBUG -connectionpool:  Starting new HTTP connection (1): 127.0.0.1:4780
+2020-08-04 10:41:34 AM - urllib3.connectionpool - DEBUG -connectionpool:  http://127.0.0.1:4780 "POST http://upload.chaojiying.net/Upload/Processing.php HTTP/1.1" 200 None
+2020-08-04 10:41:34 AM - root - INFO -chaojiying_API:  characters1.jpg,{'err_no': 0, 'err_str': 'OK', 'pic_id': '9112710414617400020', 'pic_str': '西', 'md5': '12dc01cf0cefa36df2fa299a00f97dc4'}
+2020-08-04 10:41:34 AM - urllib3.connectionpool - DEBUG -connectionpool:  Starting new HTTP connection (1): 127.0.0.1:4780
+2020-08-04 10:41:37 AM - urllib3.connectionpool - DEBUG -connectionpool:  http://127.0.0.1:4780 "POST http://upload.chaojiying.net/Upload/Processing.php HTTP/1.1" 200 None
+2020-08-04 10:41:37 AM - root - INFO -chaojiying_API:  characters2.jpg,{'err_no': 0, 'err_str': 'OK', 'pic_id': '9112710414617400021', 'pic_str': '日', 'md5': '4fcc01dd577770d3474fecb9c6fc1c93'}
+2020-08-04 10:41:37 AM - urllib3.connectionpool - DEBUG -connectionpool:  Starting new HTTP connection (1): 127.0.0.1:4780
+2020-08-04 10:41:47 AM - urllib3.connectionpool - DEBUG -connectionpool:  http://127.0.0.1:4780 "POST http://upload.chaojiying.net/Upload/Processing.php HTTP/1.1" 200 None
+2020-08-04 10:41:47 AM - root - INFO -chaojiying_API:  characters3.jpg,{'err_no': 0, 'err_str': 'OK', 'pic_id': '9112710414617400022', 'pic_str': '动', 'md5': 'ee8ae04d4e61e68bab7955abc0b2c103'}
+2020-08-04 10:41:47 AM - urllib3.connectionpool - DEBUG -connectionpool:  Starting new HTTP connection (1): 127.0.0.1:4780
+2020-08-04 10:41:53 AM - urllib3.connectionpool - DEBUG -connectionpool:  http://127.0.0.1:4780 "POST http://upload.chaojiying.net/Upload/Processing.php HTTP/1.1" 200 None
+2020-08-04 10:41:53 AM - root - INFO -chaojiying_API:  characters4.jpg,{'err_no': 0, 'err_str': 'OK', 'pic_id': '3112710414617400023', 'pic_str': '会', 'md5': '218cfe8472ca09a16d6a24e07de50b95'}

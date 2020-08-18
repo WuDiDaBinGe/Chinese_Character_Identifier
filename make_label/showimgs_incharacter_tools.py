@@ -54,7 +54,9 @@ if __name__ == '__main__':
         if not os.path.exists(target_dir):
             os.mkdir(target_dir)
         # 复制图片
-        shutil.copy(full_img_path,target_dir)
+        #shutil.copy(full_img_path,target_dir)
+        # 移动图片
+        shutil.move(full_img_path,target_dir)
     print("本次共标记{}幅图片".format(len(imgs)))
 
 
