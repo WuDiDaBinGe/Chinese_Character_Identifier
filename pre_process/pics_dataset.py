@@ -16,7 +16,7 @@ def binary_image(img):
     return img
 
 def preprocess_image(image,img_size):
-    image = tf.image.decode_jpeg(image, channels=3)
+    image = tf.image.decode_jpeg(image, channels=1)
     image = tf.image.resize(image, [img_size, img_size])
     # 对数据进行归一化，将image转到（0，1）的范围内
     #image=tf.image.convert_image_dtype(image,tf.float32)

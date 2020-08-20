@@ -82,3 +82,13 @@ image = tf.image.resize(image, [64, 64])
 方案：使用迁移学习，迁移EfficiencientNetB4 只训练最后5层，设置学习率为0.001，batch_size=128,输入图像大小为64*64，epoch=100。训练结果为：
 
 ![image-20200728190513404](C:\Users\len\AppData\Roaming\Typora\typora-user-images\image-20200728190513404.png)
+
+使用自己的数据集结果：
+
+| 模型         | 结果                                                         | 测试集结果                                    | 数据集                        |
+| ------------ | ------------------------------------------------------------ | --------------------------------------------- | ----------------------------- |
+| net003       | ![image-20200818142629158](C:\Users\len\AppData\Roaming\Typora\typora-user-images\image-20200818142629158.png) | initial loss: 1.90<br>initial accuracy: 0.73  | 原始                          |
+| efficientNet |                                                              | initial loss: 1.79<br/>initial accuracy: 0.63 | 原始                          |
+| M5-HCCR      | ![image-20200818172840397](C:\Users\len\AppData\Roaming\Typora\typora-user-images\image-20200818172840397.png) | initial loss: 0.20<br/>initial accuracy: 0.99 | 只有训练集张数>500的类(100类) |
+|              |                                                              |                                               |                               |
+
