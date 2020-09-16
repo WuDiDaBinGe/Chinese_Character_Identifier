@@ -1,6 +1,6 @@
 ## 验证码识别
 
-![](.\crack_inverifycode_pipeline\t_images\image2.jpg)
+![](.\crack_inverifycode_pipeline\t_images\image1577433432.jpg)
 
 使用深度模型技术识别验证码中的汉字。
 
